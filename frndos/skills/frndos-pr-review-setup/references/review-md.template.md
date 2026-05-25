@@ -56,11 +56,22 @@ Two official skills are pre-flighted before this doc's rubric runs. Both authori
 
 ### Mode A — PR Review (webhook → runner → `claude -p`)
 
-#### A.1 — Inline findings (CodeRabbit-style)
+#### A.1 — Output: single JSON object to stdout. No sentinels. Top-level schema:
 
-JSON array `inline_comments` to stdout. Runner posts each as line comment.
+```
+{
+  "verdict": "approve" | "request-changes" | "comment-only",
+  "diff_stats": { "added": int, "removed": int, "files": int },
+  "counts": {
+    "by_severity": { "critical": int, "high": int, "medium": int, "low": int },
+    "by_dimension": { "security": int, "quality": int, "quantity": int }
+  },
+  "summary_markdown": "<root-comment markdown per §A.2 — posted as PR issue comment>",
+  "inline_comments": [ <objects per schema below>, ... ]
+}
+```
 
-**Schema:** `{path, line, side: RIGHT|LEFT, severity: critical|high|medium|low, dimension: quality|quantity|security, title (≤80 chars, runner-log only), body (markdown ≤1200 chars per template), suggestion? (drop-in with exact whitespace)}`. Never `nit`.
+**Inline-comment schema:** `{path, line, side: RIGHT|LEFT, severity: critical|high|medium|low, dimension: quality|quantity|security, source: <official-skill-name>|repo-review, title (≤80 chars, runner-log only — NOT posted), body (markdown ≤1200 chars per body template), suggestion? (drop-in, exact whitespace)}`. Never `nit`.
 
 **Body template** (mandatory — `<details>` keeps comment compact):
 
@@ -99,9 +110,9 @@ JSON array `inline_comments` to stdout. Runner posts each as line comment.
 
 Skip `🪲 Proposed fix` if problem statement describes fix in one line. Skip `📝 Committable suggestion` if no single-hunk drop-in. `🤖 Prompt for AI Agents` always.
 
-#### A.2 — Root summary
+#### A.2 — Root summary (rendered into `summary_markdown` field)
 
-After JSON array, delimited `===SUMMARY===` / `===END SUMMARY===`. High-signal overview — NOT inline-finding dump.
+High-signal overview, NOT inline-finding dump. Posted verbatim as PR root issue comment.
 
 ```markdown
 ## 🔍 Code Review
@@ -138,7 +149,7 @@ If `caveman` skill detected, render bullets + list items in caveman-full: drop a
 
 ### Mode B — Ad-hoc
 
-Emit same `===SUMMARY===` + inline-comment JSON as markdown table grouped by file. Inline details ARE shown beneath summary.
+Emit same JSON object. Local renderer prints `summary_markdown` first, then `inline_comments` as markdown table grouped by file. No PR posting.
 
 ## 3. Review Dimension Rubrics
 
@@ -227,7 +238,7 @@ Terse + specific. Problem one sentence, fix one sentence. Never "consider"/"perh
 
 ## 7. Execution Recipe
 
-(1) `git fetch origin <base> <pr-branch>` (runner done). (2) `git diff origin/<base>...origin/<pr-branch>` = review surface. (3) pre-flight §1.5: detect each declared official skill, run each found, capture. (4) run rubric §3 with official outputs in context; merge per §1.5. (5) emit JSON array, then `===SUMMARY===` block, exit. (6) exit `0` always — runner classifies severity from JSON.
+(1) `git fetch origin <base> <pr-branch>` (runner done). (2) `git diff origin/<base>...origin/<pr-branch>` = review surface. (3) pre-flight §1.5: detect each declared official skill, run each found, capture. (4) run rubric §3 with official outputs in context; merge per §1.5. (5) compute `verdict` + `counts` + `diff_stats`, render `summary_markdown` per §A.2, assemble `inline_comments` array, emit single JSON object to stdout, exit `0` always — runner reads `verdict` directly from JSON.
 
 ## 8. Out of Scope
 

@@ -27,10 +27,10 @@
 2. **Fetch** `origin/$PR_BASE` and `origin/$PR_HEAD_REF`.
 3. **Locate** `REVIEW.md` and `KNOWLEDGE.md` at the PR head's repo root. If either missing → emit summary JSON with `error: "missing REVIEW.md"` / `"missing KNOWLEDGE.md"` and exit 0 (do NOT fail the workflow; missing docs are an onboarding issue, not a CI failure).
 4. **Invoke `claude -p` twice**:
-   - **Code review:** prompt = `REVIEW.md` content + `git diff origin/$PR_BASE...origin/$PR_HEAD_REF`. Capture stdout = inline JSON array + `===SUMMARY===`/`===END SUMMARY===` block per REVIEW.md §A.1 + §A.2.
+   - **Code review:** prompt = `REVIEW.md` content + `git diff origin/$PR_BASE...origin/$PR_HEAD_REF`. Capture stdout = single JSON object per REVIEW.md §A.1 (top-level fields: `verdict`, `diff_stats`, `counts`, `summary_markdown`, `inline_comments`).
    - **Knowledge review:** prompt = `KNOWLEDGE.md` content + same diff. Capture stdout = either `===SKIP===`/`===END SKIP===` sentinel per KNOWLEDGE.md §2.5 OR the §6 markdown template.
 5. **Post comments via `gh api`** (bot account auth on the server):
-   - Code review: each `inline_comments` JSON object → `POST /repos/$PR_REPO/pulls/$PR_NUMBER/comments`. Then the `===SUMMARY===` markdown → `POST /repos/$PR_REPO/issues/$PR_NUMBER/comments`.
+   - Code review: each `.inline_comments[]` → `POST /repos/$PR_REPO/pulls/$PR_NUMBER/comments`. Then `.summary_markdown` → `POST /repos/$PR_REPO/issues/$PR_NUMBER/comments`.
    - Knowledge review: if `===SKIP===`, post nothing. Else, the §6 markdown → `POST /repos/$PR_REPO/issues/$PR_NUMBER/comments`.
 6. **Print one JSON line to stdout** (consumed by the Lark notifier — see schema below). Exit 0 always.
 
