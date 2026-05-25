@@ -8,8 +8,21 @@ Reusable agent skills + agents for alva-intelligence repos. Installable into any
 agent-skills/
 ├── frndos/                          # frndOS-specific tooling
 │   ├── skills/                      # invokable skills (slash commands)
-│   │   └── frndos-pr-review-setup/
+│   │   ├── frndos-pr-review-setup/
+│   │   └── tiktok-social-analyzer/
 │   └── agents/                      # subagent definitions
+├── lark/                            # Lark Open Platform skills
+│   ├── skills/
+│   │   ├── lark-bitable/
+│   │   ├── lark-calendar/
+│   │   ├── lark-card-formatting/
+│   │   ├── lark-docs-wiki/
+│   │   ├── lark-drive/
+│   │   ├── lark-email/
+│   │   ├── lark-im-contacts/
+│   │   ├── lark-sheets/
+│   │   └── lark-tasks/
+│   └── agents/
 └── <future-domain>/                 # additional domains added here
     ├── skills/
     └── agents/
@@ -24,6 +37,11 @@ Each top-level folder is a **domain** — a logical grouping of related skills +
 | Skill | Purpose |
 |-------|---------|
 | `frndos-pr-review-setup` | Scaffold `REVIEW.md`, `KNOWLEDGE.md`, `.github/workflows/review.yml` into any repo so it joins the central PR-review pipeline. |
+| `tiktok-social-analyzer` | TikTok social-data analysis primitives — content, engagement, trends. |
+
+### lark/
+
+Lark Open Platform skills (Bitable, Calendar, Card formatting, Docs/Wiki, Drive, Email, IM/Contacts, Sheets, Tasks). See [`lark/README.md`](./lark/README.md) for full list.
 
 ## Install
 
