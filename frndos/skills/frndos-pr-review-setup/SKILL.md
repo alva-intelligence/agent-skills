@@ -111,7 +111,9 @@ Generates `.github/workflows/review.yml`.
 
    Ask user only if any value differs from defaults.
 
-2. **Load template** from [`references/review-yml.template.yml`](./references/review-yml.template.yml). Fill `{{RUNNER_LABEL}}`, `{{RUNNER_SCRIPT_PATH}}`, `{{LARK_SCRIPT_PATH}}`, `{{TIMEOUT_MINUTES}}`.
+2. **Load template** from [`references/review-yml.template.yml`](./references/review-yml.template.yml). Fill:
+   - `{{RUNNER_LABEL}}`, `{{RUNNER_SCRIPT_PATH}}`, `{{LARK_SCRIPT_PATH}}`, `{{TIMEOUT_MINUTES}}`
+   - `{{STACK_SPECIFIC_IGNORES}}` — append `paths-ignore` patterns from the matched stack profile's "Workflow ignore patterns" block (see `stack-profiles.md`). Each pattern as one YAML list item indented 6 spaces: `      - 'pattern'`. Empty string OK if the stack has none.
 
 3. **Verify** `.github/workflows/` exists; create if missing.
 

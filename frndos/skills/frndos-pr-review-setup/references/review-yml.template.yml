@@ -3,11 +3,15 @@
 # Renders into: <target-repo>/.github/workflows/review.yml
 #
 # Placeholders to fill:
-#   {{RUNNER_LABEL}}        e.g. frndos-pr-review (load-bearing label only the
-#                           central self-hosted runner advertises)
-#   {{RUNNER_SCRIPT_PATH}}  e.g. /var/www/pr-review.frndos.internal/bin/pr-review.sh
-#   {{LARK_SCRIPT_PATH}}    e.g. /var/www/pr-review.frndos.internal/bin/lark-notify.sh
-#   {{TIMEOUT_MINUTES}}     e.g. 20
+#   {{RUNNER_LABEL}}              e.g. frndos-pr-review (load-bearing label
+#                                 only the central self-hosted runner advertises)
+#   {{RUNNER_SCRIPT_PATH}}        e.g. /var/www/pr-review.frndos.internal/bin/pr-review.sh
+#   {{LARK_SCRIPT_PATH}}          e.g. /var/www/pr-review.frndos.internal/bin/lark-notify.sh
+#   {{TIMEOUT_MINUTES}}           e.g. 20
+#   {{STACK_SPECIFIC_IGNORES}}    YAML-list lines (each "      - 'path/**'") for
+#                                 stack-specific paths-ignore patterns. Pull from
+#                                 stack-profiles.md "Workflow ignore patterns"
+#                                 section. Empty string OK if stack has none.
 #
 # Strip THIS comment block before writing — keep the workflow's own inline
 # comments though (they're load-bearing for future maintainers).
@@ -17,6 +21,39 @@ name: Claude PR Review
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
+    # Skip review when PR ONLY touches non-code paths. Mixed PRs (code + doc)
+    # still run. Lockfiles + migrations + config kept — supply-chain + auth
+    # checks need them.
+    paths-ignore:
+      # Docs / non-code (agnostic)
+      - '**.md'
+      - 'docs/**'
+      - 'CHANGELOG*'
+      - 'LICENSE*'
+      - '.editorconfig'
+      # Git / IDE meta (agnostic)
+      - '.gitignore'
+      - '.gitattributes'
+      - '.vscode/**'
+      - '.idea/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE*'
+      - '.github/CODEOWNERS'
+      # Binary assets (agnostic)
+      - '**.png'
+      - '**.jpg'
+      - '**.jpeg'
+      - '**.gif'
+      - '**.svg'
+      - '**.ico'
+      - '**.webp'
+      - '**.woff'
+      - '**.woff2'
+      - '**.ttf'
+      - '**.otf'
+      - '**.pdf'
+      # Stack-specific patterns added by skill per stack-profiles.md
+{{STACK_SPECIFIC_IGNORES}}
 
 # Avoid stacking reviews when a PR gets several pushes in quick succession.
 concurrency:

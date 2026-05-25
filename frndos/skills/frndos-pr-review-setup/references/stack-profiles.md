@@ -25,6 +25,21 @@ To add a new profile: add a section below + reference it from `SKILL.md` step 1 
 
 **Rubric tables:** see [`review-md.template.md`](./review-md.template.md) — the embedded reference rubric IS the Laravel rubric.
 
+**Workflow ignore patterns** (append to `paths-ignore` via `{{STACK_SPECIFIC_IGNORES}}`):
+```yaml
+      # Laravel autogen
+      - '_ide_helper.php'
+      - '_ide_helper_models.php'
+      - '.phpstorm.meta.php'
+      - 'bootstrap/cache/**'
+      - 'storage/framework/**'
+      - 'storage/logs/**'
+      # Build / compiled assets
+      - 'public/build/**'
+      - 'public/hot'
+      - 'public/mix-manifest.json'
+```
+
 ---
 
 ## `ts-nextjs`
@@ -51,6 +66,18 @@ To add a new profile: add a section below + reference it from `SKILL.md` step 1 
 - Security: missing CSP, `dangerouslySetInnerHTML` without sanitisation, missing CSRF on POST routes, secrets in `NEXT_PUBLIC_*`, unsafe `<a target="_blank">` without `rel="noopener"`, missing auth on `app/api/**` routes, SQL injection in raw queries (Prisma `$queryRawUnsafe`), unvalidated `redirect()` targets, SSRF in server fetches without allowlist.
 - Quantity: same generic rubric (LOC, mixed concerns, half-finished, abstractions for single caller).
 
+**Workflow ignore patterns:**
+```yaml
+      # Next.js build output
+      - '.next/**'
+      - 'out/**'
+      - 'next-env.d.ts'
+      # Storybook
+      - 'storybook-static/**'
+      # Test snapshots (consider keeping — snapshots can hide regressions)
+      # - '**/__snapshots__/**'
+```
+
 ---
 
 ## `python-fastapi`
@@ -73,6 +100,26 @@ To add a new profile: add a section below + reference it from `SKILL.md` step 1 
 - Quality: bare `except:`, mutable default arguments, missing `async`/`await` in async route, blocking I/O in async handler, missing Pydantic response model, missing dependency injection (using globals).
 - Security: SQL injection in raw queries, missing rate limiter on auth endpoints, secrets in `os.environ` lookups outside config, missing CORS allowlist, `eval`/`exec` on user input, pickle deserialisation of user input, missing auth dependency on protected routes.
 
+**Workflow ignore patterns:**
+```yaml
+      # Python caches
+      - '__pycache__/**'
+      - '**/__pycache__/**'
+      - '*.pyc'
+      - '.pytest_cache/**'
+      - '.mypy_cache/**'
+      - '.ruff_cache/**'
+      # Coverage
+      - 'htmlcov/**'
+      - '.coverage'
+      - '.coverage.*'
+      - 'coverage.xml'
+      # Build
+      - '*.egg-info/**'
+      - 'build/**'
+      - 'dist/**'
+```
+
 ---
 
 ## `python-data`
@@ -94,6 +141,24 @@ To add a new profile: add a section below + reference it from `SKILL.md` step 1 
 - Quality: SQL string concatenation in queries, missing `LIMIT` on exploratory queries, untested transforms, pandas `inplace=True` (deprecated patterns), missing `dtype` on read_csv.
 - Security: SQL injection in ClickHouse queries (use parameter binding), credentials in connection strings logged, no row-count guard on `DELETE`/`UPDATE`, secrets in DAG default args.
 
+**Workflow ignore patterns:** same as `python-fastapi` plus data-output artefacts:
+```yaml
+      # Python caches (same as python-fastapi)
+      - '__pycache__/**'
+      - '**/__pycache__/**'
+      - '*.pyc'
+      - '.pytest_cache/**'
+      - '.mypy_cache/**'
+      - '.ruff_cache/**'
+      - 'htmlcov/**'
+      - '.coverage'
+      - '*.egg-info/**'
+      # Data outputs (review if data lineage matters — confirm with user)
+      - '*.parquet'
+      - '*.duckdb'
+      - '*.csv.gz'
+```
+
 ---
 
 ## `custom`
@@ -111,3 +176,5 @@ Generate the template with these supplied values; leave the rubric tables as TOD
 ```
 <!-- TODO: rubric tables below are starter — adapt to <framework> idiom. -->
 ```
+
+**Workflow ignore patterns:** ask user for: build-output dirs, autogen files, framework-specific cache dirs. Leave `{{STACK_SPECIFIC_IGNORES}}` empty if none.
