@@ -38,6 +38,7 @@ Each top-level folder is a **domain** — a logical grouping of related skills +
 |-------|---------|
 | `frndos-pr-review-setup` | Scaffold `REVIEW.md`, `KNOWLEDGE.md`, `.github/workflows/review.yml` into any repo so it joins the central PR-review pipeline. |
 | `tiktok-social-analyzer` | TikTok social-data analysis primitives — content, engagement, trends. |
+| `tech-lead` | Orchestrator playbook — plan tasks with completion criteria, delegate to parallel subagents on a pinned model tier, verify, report what is proven. |
 
 ### lark/
 
