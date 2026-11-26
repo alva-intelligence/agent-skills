@@ -7,7 +7,7 @@ description: Act as technical lead — plan tasks with completion criteria, dele
 
 Orchestrator playbook. You own the outcome; subagents own tasks. A subagent's claim of success is not evidence — you verify.
 
-Harness-neutral: it assumes only that you can (a) spawn a subagent with a task, a model, and read-only-or-write access, (b) check on it, and (c) send it a correction or resume it. Whatever your environment calls those things, the sequence below is the same.
+Portable: no harness, provider, model or extension is assumed. It needs only the ability to (a) spawn a subagent with a task, a model, and read-only-or-write access, (b) check on it, (c) correct or resume it. Whatever your environment calls those things, and whichever model it can reach, the sequence below is the same.
 
 ## When to use
 
@@ -29,7 +29,7 @@ Harness-neutral: it assumes only that you can (a) spawn a subagent with a task, 
 Spawn all independent tasks together in one batch, not one call per task.
 
 - Define each agent inline with its own system prompt. Named/persisted agent definitions often carry their own model — that silently overrides the model you picked, so don't rely on them for tier control.
-- Read-only by default. Write access only for tasks that produce files; if writes land on a branch or worktree, you own reviewing and merging it.
+- Read-only by default. Write access only for tasks that produce files; if the agent writes into an isolated branch or checkout, you own reviewing and merging it.
 - Never give two parallel tasks the same file. Same file → sequence it, or keep it yourself.
 - Cap concurrency (3–4 is usually right); queue the rest.
 - End every task with a `Verify:` line naming the exact command.
@@ -45,25 +45,26 @@ Verify: <exact command the agent must run and paste output of>.
 Report: files changed, commands + output, anything unverified or punted.
 ```
 
-## Model policy (hard rule)
+## Model policy (worker tier)
 
-Delegate only to these, pinned per task by model **and** reasoning effort:
+Delegate to a strong-but-cheap worker tier, never to a flagship or to yourself. Default picks, pinned per task by model **and** reasoning effort:
 
-| Model | Reasoning effort |
+| Default model | Reasoning effort |
 |---|---|
-| `opencode-go/deepseek-v4.1-flash` — DeepSeek V4.1 Flash | `max` |
-| `opencode-go/glm-5.3-flash` — GLM 5.3 Flash | `max` |
-| `claude-code/claude-sonnet-5-5` — Sonnet 5.5 | `high` |
+| Sonnet 5.5 | `high` |
+| DeepSeek V4.1 Flash | `max` |
+| GLM 5.3 Flash | `max` |
 
-The `provider/model` reference is what our stacks resolve; on a host that names models differently (bare id, display name, config alias) map it to the same three models. The tier is the rule, not the string.
+Those are defaults, not a dependency. Whatever harness, provider or model set the session has, name the model the way that stack names it; if none of the three is reachable, take the closest equivalent in the same tier — capable coding model, sub-flagship price, highest reasoning effort it accepts. The tier and the effort are the rule; the strings are not.
 
 Resolution order:
 
-1. **Same provider as you** wins — `opencode-go` orchestrator → DeepSeek V4.1 Flash; `claude-code` orchestrator → Sonnet 5.5. That provider serves its subagents unless it is limited or erroring.
-2. **Same model, more than one usable provider** (`claude-sonnet-5-5` is served by both `claude-code` and `9router/cc`) — take the provider already doing most of the work this session. A model that is currently rate-limited or returning errors is not a candidate.
-3. **Always state the model explicitly.** Omit it only when you yourself are already on one of the three.
-4. **On rate limit or provider error, resume — don't respawn.** The resumer keeps its context and its branch; start the model on the next candidate instead. Only respawn a task that never started.
-5. Anything outside the table (larger flagship models included) is off-limits for subagents.
+1. **Same provider as you** wins — whichever provider serves your own session serves its subagents, unless it is limited or erroring.
+2. **One tier model, more than one usable provider** — take the provider already doing most of the work this session. A model that is currently rate-limited or returning errors is not a candidate.
+3. **Always state the model explicitly.** Omit it only when you are already on the worker tier yourself.
+4. **On rate limit or provider error, resume — don't respawn.** The resumer keeps its context and its files; start it on the next candidate instead. Only respawn a task that never started.
+5. Nothing above the tier (flagships included) for subagents.
+6. **No extension is assumed.** Brief the capability (`run the test suite`, `read the deploy logs`), not the tool name, and let the agent use whatever it has; if a task truly needs a capability it lacks, that is your job or a different agent.
 
 ## Step 2 — Coordinate
 
@@ -105,6 +106,6 @@ Keep it to these three headings. No plan narration, no per-agent logs.
 
 - **Persisted agent definitions override the model** — inline prompts only if the pinned tier must actually apply.
 - **Parallel writers on one file** = merge conflicts. Sequence them.
-- **Unmerged work** — a "done" write task whose branch was never merged shipped nothing.
+- **Unmerged work** — a "done" write task sitting on a branch nobody merged shipped nothing.
 - **Delegating a one-liner** costs more than doing it. Delegate for parallelism or context isolation, not ceremony.
 - **Agents agree with you by default.** Ask for the checkable criterion; "looks correct" is not a result.
